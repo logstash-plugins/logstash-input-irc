@@ -91,7 +91,9 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
     end
     if @get_stats
       @request_names_thread = Stud::Task.new do
-        Stud.interval(1) do # @stats_interval * 60) do
+#        Stud.interval(30) do # @stats_interval * 60) do  # @bot goes away using this. 
+	 loop do
+          sleep (@stats_interval * 60)
           request_names
         end
       end
