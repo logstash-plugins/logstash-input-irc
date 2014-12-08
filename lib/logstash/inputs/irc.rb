@@ -56,9 +56,7 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
     require "cinch"
     @user_stats = Hash.new
     @irc_queue = Queue.new
-    if @get_stats
-	@catch_all = true
-    end
+    @catch_all = true if  @get_stats
     @logger.info("Connecting to irc server", :host => @host, :port => @port, :nick => @nick, :channels => @channels)
 
     @bot = Cinch::Bot.new
@@ -88,11 +86,15 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
 
   public
   def run(output_queue)
-    Thread.new(@bot) do |bot|
-      bot.start
+    @bot_thread = Stud::Task.new(@bot) do |bot|
+        bot.start
     end
     if @get_stats
-        start_names_thread
+      @request_names_thread = Stud::Task.new do
+        Stud.interval(1) do # @stats_interval * 60) do
+          request_names
+        end
+      end
     end
     loop do
       msg = @irc_queue.pop
@@ -131,21 +133,14 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
     # Note : Logstash channel list can have passwords ie : "channel password"
     # Need to account for that
     @channels.each do |channel|
-        if channel.include? " "
-            # Remove password from channel
-            channel = channel.split(' ')[0]
-        end
+        channel = channel.split(' ').first if channel.include?(' ')
         @user_stats[channel] = 0
         @bot.irc.send "NAMES #{channel}"
     end
   end
 
-  def start_names_thread
-    Thread.new {
-      loop do
-        sleep(@stats_interval * 60)
-        request_names
-      end
-    }
+  def teardown
+    @request_names_thread#stop!
+    @bot_thread#stop!
   end
 end # class LogStash::Inputs::Irc
