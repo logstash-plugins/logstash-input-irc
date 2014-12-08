@@ -101,6 +101,11 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
     end
     loop do
       msg = @irc_queue.pop
+      handle_response(msg, output_queue)
+    end
+  end # def run
+
+  def handle_response (msg, output_queue)
       if @get_stats and msg.command.to_s == "353"
         # Got a names list event
         # Count the users returned in msg.params[3] split by " "
@@ -128,8 +133,7 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
           output_queue << event
         end
       end
-    end
-  end # def run
+  end
 
   def request_names
     # Go though list of channels, and request a NAMES for them
@@ -138,7 +142,7 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
     @channels.each do |channel|
         channel = channel.split(' ').first if channel.include?(' ')
         @user_stats[channel] = 0
-        @bot.irc.send "NAMES #{channel}"
+        @bot.irc.send("NAMES #{channel}")
     end
   end
 
