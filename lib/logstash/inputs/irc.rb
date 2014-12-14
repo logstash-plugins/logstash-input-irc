@@ -92,8 +92,7 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
     end
     if @get_stats
       @request_names_thread = Stud::Task.new do
-#        Stud.interval(30) do # @stats_interval * 60) do  # @bot goes away using this. 
-	 loop do
+        loop do
           sleep (@stats_interval * 60)
           request_names
         end
@@ -106,13 +105,17 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
   end # def run
 
   def handle_response (msg, output_queue)
-      if @get_stats and msg.command.to_s == "353"
+      # Set some constant variables based on https://www.alien.net.au/irc/irc2numerics.html
+      RPL_NAMREPLY = "353"
+      RPL_ENDOFNAMES = "366"
+
+      if @get_stats and msg.command.to_s == RPL_NAMREPLY
         # Got a names list event
         # Count the users returned in msg.params[3] split by " "
         users = msg.params[3].split(" ")
         @user_stats[msg.channel.to_s] = (@user_stats[msg.channel.to_s] || 0)  + users.length
       end
-      if @get_stats and msg.command.to_s == "366"
+      if @get_stats and msg.command.to_s == RPL_ENDOFNAMES
         # Got an end of names event, now we can send the info down the pipe.
         event = LogStash::Event.new()
         decorate(event)
