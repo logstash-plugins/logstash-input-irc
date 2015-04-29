@@ -109,20 +109,21 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
   def handle_response (msg, output_queue)
       # Set some constant variables based on https://www.alien.net.au/irc/irc2numerics.html
 
-      if @get_stats and msg.command.to_s == RPL_NAMREPLY
-        # Got a names list event
-        # Count the users returned in msg.params[3] split by " "
-        users = msg.params[3].split(" ")
-        @user_stats[msg.channel.to_s] = (@user_stats[msg.channel.to_s] || 0)  + users.length
-      end
-      if @get_stats and msg.command.to_s == RPL_ENDOFNAMES
-        # Got an end of names event, now we can send the info down the pipe.
-        event = LogStash::Event.new()
-        decorate(event)
-        event["channel"] = msg.channel.to_s
-        event["users"] = @user_stats[msg.channel.to_s]
-        event["server"] = "#{@host}:#{@port}"
-        output_queue << event
+      if @get_stats
+        if msg.command.to_s == RPL_NAMREPLY
+          # Got a names list event
+          # Count the users returned in msg.params[3] split by " "
+          users = msg.params[3].split(" ")
+          @user_stats[msg.channel.to_s] = (@user_stats[msg.channel.to_s] || 0)  + users.length
+        elsif msg.command.to_s == RPL_ENDOFNAMES
+          # Got an end of names event, now we can send the info down the pipe.
+          event = LogStash::Event.new()
+          decorate(event)
+          event["channel"] = msg.channel.to_s
+          event["users"] = @user_stats[msg.channel.to_s]
+          event["server"] = "#{@host}:#{@port}"
+          output_queue << event
+        end
       end
       if msg.command and msg.user
         @logger.debug("IRC Message", :data => msg)
