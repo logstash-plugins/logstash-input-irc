@@ -103,10 +103,11 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
     end
   end # def run
 
+  RPL_NAMREPLY = "353"
+  RPL_ENDOFNAMES = "366"
+
   def handle_response (msg, output_queue)
       # Set some constant variables based on https://www.alien.net.au/irc/irc2numerics.html
-      RPL_NAMREPLY = "353"
-      RPL_ENDOFNAMES = "366"
 
       if @get_stats and msg.command.to_s == RPL_NAMREPLY
         # Got a names list event
