@@ -133,7 +133,6 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
           event["channel"] = msg.channel.to_s
           event["nick"] = msg.user.nick
           event["server"] = "#{@host}:#{@port}"
-          event["host"] = msg.user.host
           output_queue << event
         end
       end
