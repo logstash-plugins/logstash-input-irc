@@ -52,14 +52,24 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
   config :channels, :validate => :array, :required => true
 
   public
+
+  def inject_bot(bot)
+    @bot = bot
+  end
+
+  def bot
+    @bot
+  end
+
   def register
     require "cinch"
+    @run_mutex = Mutex.new
     @user_stats = Hash.new
     @irc_queue = Queue.new
     @catch_all = true if  @get_stats
     @logger.info("Connecting to irc server", :host => @host, :port => @port, :nick => @nick, :channels => @channels)
 
-    @bot = Cinch::Bot.new
+    @bot ||= Cinch::Bot.new
     @bot.loggers.clear
     @bot.configure do |c|
       c.server = @host
@@ -77,11 +87,11 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
           queue << m
         end
     else
-        @bot.on :channel  do |m|
-          queue << m
-        end
+      @bot.on :channel  do |m|
+        queue << m
+      end
     end
-
+    @run_mutex.synchronize{@run = true}
   end # def register
 
   public
@@ -97,9 +107,13 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
         end
       end
     end
-    loop do
-      msg = @irc_queue.pop
-      handle_response(msg, output_queue)
+    while run? do
+      begin
+        msg = @irc_queue.pop(true)
+        handle_response(msg, output_queue)
+      rescue ThreadError
+        # Empty queue
+      end
     end
   end # def run
 
@@ -151,7 +165,12 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
   end
 
   def teardown
-    @request_names_thread#stop!
-    @bot_thread#stop!
+    @request_names_thread.stop! if @request_names_thread
+    @bot_thread.stop!
+    @run_mutex.synchronize{@run = false}
+  end
+
+  def run?
+    @run_mutex.synchronize{@run}
   end
 end # class LogStash::Inputs::Irc
