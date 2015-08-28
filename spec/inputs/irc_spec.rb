@@ -34,8 +34,7 @@ describe LogStash::Inputs::Irc do
       allow(msg).to receive(:prefix).and_return("prefix")
       allow(msg).to receive(:channel).and_return("channel")
 
-      subject.inject_bot(bot)
-      subject.register
+      subject.inject_bot(bot).register
     end
 
     let(:bot)     { Cinch::Bot.new }
