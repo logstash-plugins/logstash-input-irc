@@ -55,6 +55,7 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
 
   def inject_bot(bot)
     @bot = bot
+    self
   end
 
   def bot
