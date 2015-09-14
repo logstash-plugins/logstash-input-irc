@@ -17,6 +17,14 @@ describe LogStash::Inputs::Irc do
     expect { plugin.register }.to_not raise_error
   end
 
+  context "when stopping the plugin" do
+    it_behaves_like "an interruptible input plugin" do
+      let(:host)       { "irc.freenode.org" }
+      let(:channels)   { ["foo", "bar"] }
+      let(:config) { {  "host" => host, "channels" => channels, "get_stats" => true } }
+    end
+  end
+
   describe "receive" do
 
     let(:config) { { "host" => host, "channels" => channels } }
@@ -66,6 +74,5 @@ describe LogStash::Inputs::Irc do
     it "receive events with nick information" do
       expect(event["nick"]).to eq("nick")
     end
-
   end
 end

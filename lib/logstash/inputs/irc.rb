@@ -2,7 +2,8 @@
 require "logstash/inputs/base"
 require "logstash/namespace"
 require "thread"
-
+require "stud/task"
+require "stud/interval"
 # Read events from an IRC Server.
 #
 class LogStash::Inputs::Irc < LogStash::Inputs::Base
@@ -64,7 +65,6 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
 
   def register
     require "cinch"
-    @run_mutex = Mutex.new
     @user_stats = Hash.new
     @irc_queue = Queue.new
     @catch_all = true if  @get_stats
@@ -92,23 +92,24 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
         queue << m
       end
     end
-    @run_mutex.synchronize{@run = true}
   end # def register
 
   public
   def run(output_queue)
     @bot_thread = Stud::Task.new(@bot) do |bot|
-        bot.start
+      bot.start
     end
     if @get_stats
       @request_names_thread = Stud::Task.new do
-        loop do
-          sleep (@stats_interval * 60)
+        while !stop?
+          Stud.stoppable_sleep (@stats_interval * 60) do
+            stop?
+          end
           request_names
         end
       end
     end
-    while run? do
+    while !stop?
       begin
         msg = @irc_queue.pop(true)
         handle_response(msg, output_queue)
@@ -165,13 +166,8 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
     end
   end
 
-  def teardown
+  def stop
     @request_names_thread.stop! if @request_names_thread
     @bot_thread.stop!
-    @run_mutex.synchronize{@run = false}
-  end
-
-  def run?
-    @run_mutex.synchronize{@run}
   end
 end # class LogStash::Inputs::Irc

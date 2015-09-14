@@ -12,7 +12,7 @@ module IrcHelpers
     end
     result = block.call(queue)
 
-    plugin.teardown
+    plugin.do_stop
     input_thread.join
     result
   end
