@@ -4,7 +4,7 @@ require 'logstash/inputs/irc'
 
 module IrcHelpers
 
-  def input(plugin, &block)
+  def self.input(plugin, &block)
     queue = Queue.new
 
     input_thread = Thread.new do
@@ -17,8 +17,4 @@ module IrcHelpers
     result
   end
 
-end
-
-RSpec.configure do |c|
-  c.include IrcHelpers
 end
