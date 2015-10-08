@@ -50,7 +50,7 @@ describe LogStash::Inputs::Irc do
     let(:nevents) { 1 }
 
     let(:events) do
-      input(subject) do |queue|
+      plugin_input(subject) do |queue|
         nevents.times do
           channel.call(msg, [], [])
         end
