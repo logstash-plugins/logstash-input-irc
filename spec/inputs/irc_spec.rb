@@ -64,15 +64,15 @@ describe LogStash::Inputs::Irc do
     let(:event) { events.first }
 
     it "receive events from a channel" do
-      expect(event["channel"]).to eq("channel")
+      expect(event.get("channel")).to eq("channel")
     end
 
     it "receive events with a command" do
-      expect(event["command"]).to eq("command")
+      expect(event.get("command")).to eq("command")
     end
 
     it "receive events with nick information" do
-      expect(event["nick"]).to eq("nick")
+      expect(event.get("nick")).to eq("nick")
     end
   end
 end

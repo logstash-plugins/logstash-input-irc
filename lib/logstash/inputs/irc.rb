@@ -135,21 +135,21 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
         # Got an end of names event, now we can send the info down the pipe.
         event = LogStash::Event.new()
         decorate(event)
-        event["channel"] = msg.channel.to_s
-        event["users"] = @user_stats[msg.channel.to_s]
-        event["server"] = "#{@host}:#{@port}"
+        event.set("channel", msg.channel.to_s)
+        event.set("users", @user_stats[msg.channel.to_s])
+        event.set("server", "#{@host}:#{@port}")
         output_queue << event
       end
       if msg.command and msg.user
         @logger.debug("IRC Message", :data => msg)
         @codec.decode(msg.message) do |event|
           decorate(event)
-          event["user"] = msg.prefix.to_s
-          event["command"] = msg.command.to_s
-          event["channel"] = msg.channel.to_s
-          event["nick"] = msg.user.nick
-          event["server"] = "#{@host}:#{@port}"
-          event["host"] = msg.user.host
+          event.set("user", msg.prefix.to_s)
+          event.set("command", msg.command.to_s)
+          event.set("channel", msg.channel.to_s)
+          event.set("nick", msg.user.nick)
+          event.set("server", "#{@host}:#{@port}")
+          event.set("host", msg.user.host)
           output_queue << event
         end
       end
