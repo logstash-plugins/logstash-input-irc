@@ -9,6 +9,7 @@ require "stud/interval"
 class LogStash::Inputs::Irc < LogStash::Inputs::Base
 
   config_name "irc"
+  milestone 1
 
   default :codec, "plain"
 
