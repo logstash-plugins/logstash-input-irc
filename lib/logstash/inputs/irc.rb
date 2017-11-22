@@ -4,6 +4,9 @@ require "logstash/namespace"
 require "thread"
 require "stud/task"
 require "stud/interval"
+
+require "java"
+
 # Read events from an IRC Server.
 #
 class LogStash::Inputs::Irc < LogStash::Inputs::Base
@@ -66,7 +69,7 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
   def register
     require "cinch"
     @user_stats = Hash.new
-    @irc_queue = Queue.new
+    @irc_queue = java.util.concurrent.LinkedBlockingQueue.new
     @catch_all = true if  @get_stats
     @logger.info("Connecting to irc server", :host => @host, :port => @port, :nick => @nick, :channels => @channels)
 
@@ -110,12 +113,8 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
       end
     end
     while !stop?
-      begin
-        msg = @irc_queue.pop(true)
-        handle_response(msg, output_queue)
-      rescue ThreadError
-        # Empty queue
-      end
+      msg = @irc_queue.poll(1, java.util.concurrent.TimeUnit::SECONDS)
+      handle_response(msg, output_queue) unless msg.nil?
     end
   end # def run
 
