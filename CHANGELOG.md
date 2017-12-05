@@ -1,3 +1,6 @@
+## UNRELEASED
+ - Fix bug where a connection to an idle IRC channel consumed 100% available CPU
+
 ## 3.0.5
   - Update gemspec summary
 
