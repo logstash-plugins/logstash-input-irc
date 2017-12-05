@@ -1,6 +1,7 @@
 ## UNRELEASED
  - Fix bug where a connection to an idle IRC channel consumed 100% available CPU
  - Fix issue where a message that did not contain a user's hostname could cause irc input to hang or crash
+ - Fix issue where IRC bots could be left running after a pipeline reload
 
 ## 3.0.5
   - Update gemspec summary
