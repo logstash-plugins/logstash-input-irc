@@ -116,6 +116,8 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
       msg = @irc_queue.poll(1, java.util.concurrent.TimeUnit::SECONDS)
       handle_response(msg, output_queue) unless msg.nil?
     end
+  ensure
+    stop rescue logger.warn("irc input failed to shutdown gracefully: #{$!.message}")
   end # def run
 
   RPL_NAMREPLY = "353"
@@ -170,7 +172,7 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
   end
 
   def stop
-    @request_names_thread.stop! if @request_names_thread
-    @bot_thread.stop!
+    @request_names_thread.stop! if @request_names_thread && !@request_names_thread.stop?
+    @bot_thread.stop! if @bot_thread && !@bot_thread.stop?
   end
 end # class LogStash::Inputs::Irc
