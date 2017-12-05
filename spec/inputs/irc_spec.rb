@@ -33,11 +33,13 @@ describe LogStash::Inputs::Irc do
     let(:msg)    { double("message") }
     let(:user)   { double("user") }
 
+    let(:user_data) { { host: "host", nick: "nick"} }
+
     before(:each) do
       allow(msg).to receive(:message).and_return("message")
       allow(msg).to receive(:command).and_return("command")
-      allow(user).to receive(:host).and_return("host")
-      allow(user).to receive(:nick).and_return("nick")
+      allow(user).to receive(:data).and_return(user_data)
+      allow(user).to receive(:nick).and_return(user_data[:nick])
       allow(msg).to receive(:user).and_return(user)
       allow(msg).to receive(:prefix).and_return("prefix")
       allow(msg).to receive(:channel).and_return("channel")
@@ -73,6 +75,19 @@ describe LogStash::Inputs::Irc do
 
     it "receive events with nick information" do
       expect(event.get("nick")).to eq("nick")
+    end
+
+    it "receive events with host information" do
+      expect(event.get("host")).to eq("host")
+    end
+
+    context "when host is unavailable" do
+
+      let(:user_data) { super().merge(host: nil)}
+
+      it "handles unknown host well" do
+        expect(event.get("host")).to be_nil
+      end
     end
   end
 end
