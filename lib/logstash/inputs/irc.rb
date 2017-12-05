@@ -148,7 +148,11 @@ class LogStash::Inputs::Irc < LogStash::Inputs::Base
           event.set("channel", msg.channel.to_s)
           event.set("nick", msg.user.nick)
           event.set("server", "#{@host}:#{@port}")
-          event.set("host", msg.user.host)
+          # The user's host attribute is an optional part of the message format;
+          # when it is not included, `Cinch::User#host` times out waiting for it
+          # to be populated, raising an exception; use `Cinch::User#data` to get
+          # host, which includes the user attributes as-parsed.
+          event.set("host", msg.user.data[:host])
           output_queue << event
         end
       end
