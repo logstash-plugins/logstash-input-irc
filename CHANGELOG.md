@@ -1,3 +1,6 @@
+## 3.0.7
+  - Docs: Set the default_codec doc attribute.
+
 ## 3.0.6
  - Fix bug where a connection to an idle IRC channel consumed 100% available CPU
  - Fix issue where a message that did not contain a user's hostname could cause irc input to hang or crash
